@@ -27,18 +27,22 @@ class Topic(models.Model):
 
 
 class Post(models.Model):
-    title = models.CharField(max_length=150)
+    title = models.CharField(max_length=100)
     text = models.TextField()
-    topic = models.ForeignKey('posts.Topic', on_delete=models.CASCADE)
-    slug = models.SlugField(max_length=255, unique=True)
+    topic = models.ForeignKey(Topic, on_delete=models.CASCADE)
+    slug = models.SlugField(unique=True)
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
-    created_by = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE)
+    created_by = models.ForeignKey(
+        'auth.User',
+        on_delete=models.CASCADE,
+        related_name='posts'
+    )
 
     class Meta:
-        ordering = ["-created_at"]  # od najnowszych
+        permissions = [
+            ('can_edit_others_posts', 'Can edit posts created by other users'),
+        ]
 
     def __str__(self):
-        words = self.text.split()
-        head = " ".join(words[:5])
-        return head + ("..." if len(words) > 5 else "")
+        return self.title
