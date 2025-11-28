@@ -1,8 +1,13 @@
-from rest_framework.decorators import api_view
+from rest_framework.decorators import api_view, authentication_classes, permission_classes
 from rest_framework.response import Response
-from rest_framework import status
+from rest_framework import status, generics
+from rest_framework.authentication import SessionAuthentication, TokenAuthentication
+from rest_framework.permissions import IsAuthenticated
+
 from .models import Category, Topic, Post
 from .serializers import CategoryModelSerializer, TopicModelSerializer, PostModelSerializer
+from .permissions import CustomDjangoModelPermissions  # dodamy ten plik za chwile
+
 
 @api_view(["GET", "POST"])
 def category_list(request):
@@ -100,19 +105,46 @@ def post_list(request):
     return Response(s.errors, status=status.HTTP_400_BAD_REQUEST)
 
 @api_view(["GET", "PUT", "DELETE"])
+@authentication_classes([SessionAuthentication])
+@permission_classes([IsAuthenticated])
 def post_detail(request, pk):
     try:
         obj = Post.objects.get(pk=pk)
     except Post.DoesNotExist:
         return Response(status=status.HTTP_404_NOT_FOUND)
+
     if request.method == "GET":
         s = PostModelSerializer(obj)
         return Response(s.data)
+
+    # tutaj sprawdzamy czy user edytuje cudzy post
+    # jesli tak, musi miec uprawnienie posts.can_edit_others_posts
+    if obj.created_by != request.user and not request.user.has_perm("posts.can_edit_others_posts"):
+        return Response(
+            {"detail": "You do not have permission to edit posts created by other users."},
+            status=status.HTTP_403_FORBIDDEN,
+        )
+
     if request.method == "PUT":
         s = PostModelSerializer(obj, data=request.data)
         if s.is_valid():
             s.save()
             return Response(s.data)
         return Response(s.errors, status=status.HTTP_400_BAD_REQUEST)
+
+    # DELETE
     obj.delete()
     return Response(status=status.HTTP_204_NO_CONTENT)
+
+
+class PostSecureList(generics.ListCreateAPIView):
+    queryset = Post.objects.all()
+    serializer_class = PostModelSerializer
+    authentication_classes = [SessionAuthentication, TokenAuthentication]
+    permission_classes = [IsAuthenticated, CustomDjangoModelPermissions]
+
+
+class PostSecureDetail(generics.RetrieveUpdateDestroyAPIView):
+    queryset = Post.objects.all()
+    serializer_class = PostModelSerializer
+    permission_classes = [IsAuthenticated, CustomDjangoModelPermissions]

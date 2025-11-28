@@ -12,4 +12,8 @@ urlpatterns = [
 
     path("posts/", api_views.post_list),
     path("posts/<int:pk>/", api_views.post_detail),
+
+    path('posts-secure/', api_views.PostSecureList.as_view()),
+    path('posts-secure/<int:pk>/', api_views.PostSecureDetail.as_view()),
+    path('posts-secure/<int:pk>/', api_views.PostSecureDetail.as_view(), name='post-secure-detail'),
 ]
