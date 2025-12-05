@@ -6,7 +6,7 @@ from rest_framework.permissions import IsAuthenticated
 
 from .models import Category, Topic, Post
 from .serializers import CategoryModelSerializer, TopicModelSerializer, PostModelSerializer
-from .permissions import CustomDjangoModelPermissions  # dodamy ten plik za chwile
+from .permissions import CustomDjangoModelPermissions
 
 
 @api_view(["GET", "POST"])

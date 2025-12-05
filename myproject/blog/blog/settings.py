@@ -16,6 +16,7 @@ INSTALLED_APPS = [
     'rest_framework',
     'posts',
     'debug_toolbar',
+    'graphene_django',
 ]
 
 MIDDLEWARE = [
@@ -75,6 +76,9 @@ INTERNAL_IPS = ['127.0.0.1']
 
 REST_FRAMEWORK = {
     'DEFAULT_PERMISSION_CLASSES': (
-        'rest_framework.permissions.AllowAny',  # albo IsAuthenticated, jak wolisz
+        'rest_framework.permissions.AllowAny',
     )
+}
+GRAPHENE = {
+    "SCHEMA": "blog.schema.schema"
 }
